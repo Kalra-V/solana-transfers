@@ -8,11 +8,6 @@ declare_id!("4s2eUn3rBK2y6KSgPgMmkucsPPogxMPbK5HtUNhfV91y");
 pub mod solana_transfers {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        msg!("Greetings from: {:?}", ctx.program_id);
-        Ok(())
-    }
-
     pub fn transfer_sol(ctx: Context<TransferSol>, amount: u64) -> Result<()> {
         msg!("Transferring SOL...");
 
@@ -53,8 +48,6 @@ pub mod solana_transfers {
     }
 }
 
-#[derive(Accounts)]
-pub struct Initialize {}
 
 #[derive(Accounts)]
 pub struct TransferSol<'info> {
