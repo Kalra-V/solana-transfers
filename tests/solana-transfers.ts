@@ -1,11 +1,15 @@
 import * as anchor from "@coral-xyz/anchor";
 import {
+  createMint,
+  getOrCreateAssociatedTokenAccount,
+  mintTo,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import {
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
-  sendAndConfirmTransaction,
   SystemProgram,
-  Transaction,
 } from "@solana/web3.js";
 import { BN } from "bn.js";
 
@@ -49,4 +53,63 @@ describe("transfer-sol", () => {
     console.log(`   Payer: ${payerBalance / LAMPORTS_PER_SOL}`);
     console.log(`   Recipient: ${recipientBalance / LAMPORTS_PER_SOL}`);
   }
+});
+
+describe("transfer-tokens", () => {
+  const provider = anchor.AnchorProvider.env();
+  anchor.setProvider(provider);
+
+  const payer = provider.wallet as anchor.Wallet;
+  const program = anchor.workspace.solanaTransfers;
+
+  let mint: PublicKey;
+  let senderTokenAccount: any;
+  let recipientTokenAccount: any;
+  const recipient = new Keypair();
+
+  before(async () => {
+    mint = await createMint(
+      provider.connection,
+      payer.payer,
+      payer.publicKey,
+      null,
+      0
+    );
+
+    senderTokenAccount = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      payer.payer,
+      mint,
+      payer.publicKey
+    );
+
+    recipientTokenAccount = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      payer.payer,
+      mint,
+      recipient.publicKey
+    );
+
+    await mintTo(
+      provider.connection,
+      payer.payer,
+      mint,
+      senderTokenAccount.address,
+      payer.publicKey,
+      100
+    );
+  });
+
+  it("Transfer tokens!", async () => {
+    await program.methods
+      .transferTokens(new BN(50))
+      .accounts({
+        signer: payer.publicKey,
+        mint,
+        senderTokenAccount: senderTokenAccount.address,
+        recipientTokenAccount: recipientTokenAccount.address,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .rpc();
+  });
 });
