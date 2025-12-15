@@ -15,6 +15,8 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
 } from "@solana/spl-token";
+import dotenv from "dotenv";
+dotenv.config();
 
 const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 const recipient = new PublicKey("DF8TJWHnn6P3avD6zr6bxmevQCSADWNquJbse6fhzdt6");
@@ -22,12 +24,14 @@ const recipient = new PublicKey("DF8TJWHnn6P3avD6zr6bxmevQCSADWNquJbse6fhzdt6");
 let wallet;
 
 try {
+  const keypairPath = process.env.SOLANA_KEYPAIR_PATH;
+
+  if (!keypairPath) {
+    throw new Error("SOLANA_KEYPAIR_PATH env var is not set");
+  }
+
   wallet = Keypair.fromSecretKey(
-    Uint8Array.from(
-      JSON.parse(
-        fs.readFileSync("/Users/vanshkalra/.config/solana/id.json", "utf8")
-      )
-    )
+    Uint8Array.from(JSON.parse(fs.readFileSync(keypairPath, "utf8")))
   );
   console.log("Wallet loaded successfully");
 } catch (error) {
