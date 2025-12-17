@@ -108,11 +108,10 @@ pub struct TransferSolToPDA<'info> {
 
 #[derive(Accounts)]
 pub struct TransferSolFromPDA<'info> {
-    /// CHECK: This aint unsafe?
+    /// CHECK: not sure why this is unsafe
     #[account(mut, seeds = [b"xyzpda", recipient.key().as_ref()], bump)]
     pda: AccountInfo<'info>,
-    /// CHECK: NO IDEA
     #[account(mut)]
-    recipient: AccountInfo<'info>,
+    recipient: SystemAccount<'info>,
     system_program: Program<'info, System>,
 }
