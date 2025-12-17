@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::system_program;
-use anchor_spl::token_interface::{self, TokenAccount, TokenInterface, TransferChecked, Mint};
+use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
 
 declare_id!("4s2eUn3rBK2y6KSgPgMmkucsPPogxMPbK5HtUNhfV91y");
 
@@ -46,8 +46,30 @@ pub mod solana_transfers {
 
         Ok(())
     }
-}
 
+    pub fn transfer_sol_to_pda(ctx: Context<TransferSolToPDA>, amount: u64) -> Result<()> {
+        let from_pubkey = ctx.accounts.sender.to_account_info();
+        let to_pubkey = ctx.accounts.recipient.to_account_info();
+        let program_id = ctx.accounts.system_program.to_account_info();
+
+        let cpi_context = CpiContext::new(
+            program_id,
+            system_program::Transfer {
+                from: from_pubkey,
+                to: to_pubkey,
+            },
+        );
+        system_program::transfer(cpi_context, amount)?;
+        Ok(())
+    }
+
+    pub fn transfer_sol_from_pda(ctx: Context<TransferSolFromPDA>, amount: u64) -> Result<()> {
+        ctx.accounts.pda.sub_lamports(amount)?;
+        ctx.accounts.recipient.add_lamports(amount)?;
+
+        Ok(())
+    }
+}
 
 #[derive(Accounts)]
 pub struct TransferSol<'info> {
@@ -71,4 +93,26 @@ pub struct TransferTokens<'info> {
     #[account(mut)]
     pub recipient_token_account: InterfaceAccount<'info, TokenAccount>,
     pub token_program: Interface<'info, TokenInterface>,
+}
+
+#[derive(Accounts)]
+pub struct TransferSolToPDA<'info> {
+    #[account(mut)]
+    sender: Signer<'info>,
+    /// CHECK: we are not sure if the PDA already exists on-chain or not.
+    /// So we use init_if_needed to ensure the account is created if its not there
+    #[account(init_if_needed, payer = sender, space = 0, seeds = [b"xyzpda", sender.key().as_ref()], bump)]
+    recipient: UncheckedAccount<'info>,
+    system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct TransferSolFromPDA<'info> {
+    /// CHECK: This aint unsafe?
+    #[account(mut, seeds = [b"xyzpda", recipient.key().as_ref()], bump)]
+    pda: AccountInfo<'info>,
+    /// CHECK: NO IDEA
+    #[account(mut)]
+    recipient: AccountInfo<'info>,
+    system_program: Program<'info, System>,
 }

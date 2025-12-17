@@ -21,7 +21,7 @@ describe("transfer-sol", () => {
   const payer = provider.wallet;
   const program = anchor.workspace.solanaTransfers;
 
-  const transferAmount = 1 * LAMPORTS_PER_SOL;
+  const transferAmount = 0.5 * LAMPORTS_PER_SOL;
 
   const recipient = new Keypair();
 
@@ -109,6 +109,62 @@ describe("transfer-tokens", () => {
         senderTokenAccount: senderTokenAccount.address,
         recipientTokenAccount: recipientTokenAccount.address,
         tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .rpc();
+  });
+});
+
+describe("transfer-sol-to-pda", () => {
+  const provider = anchor.AnchorProvider.env();
+
+  anchor.setProvider(provider);
+
+  const payer = provider.wallet;
+  const program = anchor.workspace.solanaTransfers;
+
+  const transferAmount = 0.5 * LAMPORTS_PER_SOL;
+
+  const [recipientPDA] = PublicKey.findProgramAddressSync(
+    [Buffer.from("xyzpda"), payer.publicKey.toBuffer()],
+    program.programId
+  );
+
+  it("Transfer SOL to PDA", async () => {
+    await program.methods
+      .transferSolToPda(new BN(transferAmount))
+      .accounts({
+        sender: payer.publicKey,
+        recipient: recipientPDA,
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc();
+  });
+});
+
+describe("transfer-sol-from-pda", () => {
+  const provider = anchor.AnchorProvider.env();
+
+  anchor.setProvider(provider);
+
+  const payer = provider.wallet;
+  const program = anchor.workspace.solanaTransfers;
+
+  const transferAmount = 0.5 * LAMPORTS_PER_SOL;
+
+  const [pdaAccount] = PublicKey.findProgramAddressSync(
+    [Buffer.from("xyzpda"), payer.publicKey.toBuffer()],
+    program.programId
+  );
+
+  console.log("PDA ACCOUNT: ", pdaAccount);
+
+  it("Transfer SOL from PDA", async () => {
+    await program.methods
+      .transferSolFromPda(new BN(transferAmount))
+      .accounts({
+        pda: pdaAccount,
+        recipient: payer.publicKey,
+        systemProgram: SystemProgram.programId,
       })
       .rpc();
   });
