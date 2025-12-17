@@ -48,6 +48,114 @@ export type SolanaTransfers = {
       ]
     },
     {
+      "name": "transferSolFromPda",
+      "discriminator": [
+        47,
+        16,
+        236,
+        110,
+        50,
+        118,
+        225,
+        170
+      ],
+      "accounts": [
+        {
+          "name": "pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  120,
+                  121,
+                  122,
+                  112,
+                  100,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "recipient"
+              }
+            ]
+          }
+        },
+        {
+          "name": "recipient",
+          "writable": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "transferSolToPda",
+      "discriminator": [
+        231,
+        93,
+        192,
+        169,
+        71,
+        218,
+        168,
+        61
+      ],
+      "accounts": [
+        {
+          "name": "sender",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "recipient",
+          "docs": [
+            "So we use init_if_needed to ensure the account is created if its not there"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  120,
+                  121,
+                  122,
+                  112,
+                  100,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "sender"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "transferTokens",
       "discriminator": [
         54,

@@ -146,3 +146,89 @@ export const transferTokens = async () => {
 //   .catch((error) => {
 //     console.error("Error transferring TOKENS", error);
 //   });
+
+export const transferSolToPda = async () => {
+  let blockhash = await connection.getLatestBlockhash();
+
+  const [recipientPDA] = PublicKey.findProgramAddressSync(
+    [Buffer.from("xyzpda"), wallet.publicKey.toBuffer()],
+    program.programId
+  );
+
+  const instructions = [
+    await program.methods
+      .transferSolToPda(new BN(1 * LAMPORTS_PER_SOL))
+      .accounts({
+        sender: wallet.publicKey,
+        recipient: recipientPDA,
+        systemProgram: SystemProgram.programId,
+      })
+      .instruction(),
+  ];
+
+  const messageV0 = new web3.TransactionMessage({
+    payerKey: wallet.publicKey,
+    recentBlockhash: blockhash.blockhash,
+    instructions: instructions,
+  }).compileToV0Message();
+
+  const transaction = new web3.VersionedTransaction(messageV0);
+
+  transaction.sign([wallet]);
+
+  const txSignature = await connection.sendTransaction(transaction);
+
+  console.log("Transaction hash", txSignature);
+  console.log(`https://explorer.solana.com/tx/${txSignature}?cluster=devnet`);
+};
+
+// transferSolToPda()
+//   .then(async () => {
+//     console.log("Transfer complete");
+//   })
+//   .catch((error) => {
+//     console.error("Error transferring SOL", error);
+//   });
+
+export const transferSolFromPda = async () => {
+  let blockhash = await connection.getLatestBlockhash();
+
+  const [senderPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("xyzpda"), wallet.publicKey.toBuffer()],
+    program.programId
+  );
+
+  const instructions = [
+    await program.methods
+      .transferSolFromPda(new BN(1 * LAMPORTS_PER_SOL))
+      .accounts({
+        pda: senderPda,
+        recipient: wallet.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .instruction(),
+  ];
+
+  const messageV0 = new web3.TransactionMessage({
+    payerKey: wallet.publicKey,
+    recentBlockhash: blockhash.blockhash,
+    instructions: instructions,
+  }).compileToV0Message();
+
+  const transaction = new web3.VersionedTransaction(messageV0);
+
+  transaction.sign([wallet]);
+
+  const txSignature = await connection.sendTransaction(transaction);
+
+  console.log("Transaction hash", txSignature);
+  console.log(`https://explorer.solana.com/tx/${txSignature}?cluster=devnet`);
+};
+
+transferSolFromPda()
+  .then(async () => {
+    console.log("Transfer complete");
+  })
+  .catch((error) => {
+    console.error("Error transferring SOL", error);
+  });
