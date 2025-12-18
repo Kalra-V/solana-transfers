@@ -225,10 +225,10 @@ export const transferSolFromPda = async () => {
   console.log(`https://explorer.solana.com/tx/${txSignature}?cluster=devnet`);
 };
 
-transferSolFromPda()
-  .then(async () => {
-    console.log("Transfer complete");
-  })
-  .catch((error) => {
-    console.error("Error transferring SOL", error);
-  });
+// transferSolFromPda()
+//   .then(async () => {
+//     console.log("Transfer complete");
+//   })
+//   .catch((error) => {
+//     console.error("Error transferring SOL", error);
+//   });
