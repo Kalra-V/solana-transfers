@@ -13,6 +13,7 @@ import fs from "fs";
 import { BN } from "bn.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  getOrCreateAssociatedTokenAccount,
   TOKEN_2022_PROGRAM_ID,
 } from "@solana/spl-token";
 import dotenv from "dotenv";
@@ -232,3 +233,169 @@ export const transferSolFromPda = async () => {
 //   .catch((error) => {
 //     console.error("Error transferring SOL", error);
 //   });
+
+export const transferTokensToPda = async () => {
+  let blockhash = await connection.getLatestBlockhash();
+
+  // the token I am using has 9 decimals
+  const decimals = 9;
+  const amountInBaseUnits = new BN(1).mul(new BN(10).pow(new BN(decimals)));
+
+  const MINT_ADDRESS = new PublicKey(
+    "9PW5vownEEBguqy1WEcCH55vzyLb18428RdFagq7mLfe"
+  );
+
+  const senderTokenAccount = await getOrCreateAssociatedTokenAccount(
+    connection,
+    wallet,
+    MINT_ADDRESS,
+    wallet.publicKey,
+    false,
+    undefined,
+    undefined,
+    TOKEN_2022_PROGRAM_ID,
+    ASSOCIATED_TOKEN_PROGRAM_ID
+  );
+
+  const [recipientPDA] = PublicKey.findProgramAddressSync(
+    [Buffer.from("xyzpdastill"), wallet.publicKey.toBuffer()],
+    program.programId
+  );
+
+  const recipientTokenAccount = await getOrCreateAssociatedTokenAccount(
+    connection,
+    wallet,
+    MINT_ADDRESS,
+    recipientPDA,
+    true,
+    undefined,
+    undefined,
+    TOKEN_2022_PROGRAM_ID,
+    ASSOCIATED_TOKEN_PROGRAM_ID
+  );
+
+  console.log("PDA: ", recipientPDA);
+  console.log("SENDER ATA: ", senderTokenAccount.address);
+  console.log("RECIPIENT PDA ATA: ", recipientTokenAccount.address);
+
+  const instructions = [
+    await program.methods
+      .transferTokensToPda(amountInBaseUnits)
+      .accounts({
+        signer: wallet.publicKey,
+        mint: MINT_ADDRESS,
+        senderTokenAccount: senderTokenAccount.address,
+        pda: recipientPDA,
+        pdaTokenAccount: recipientTokenAccount.address,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .instruction(),
+  ];
+
+  const messageV0 = new web3.TransactionMessage({
+    payerKey: wallet.publicKey,
+    recentBlockhash: blockhash.blockhash,
+    instructions: instructions,
+  }).compileToV0Message();
+
+  const transaction = new web3.VersionedTransaction(messageV0);
+
+  transaction.sign([wallet]);
+
+  const txSignature = await connection.sendTransaction(transaction);
+
+  console.log("Transaction hash", txSignature);
+  console.log(`https://explorer.solana.com/tx/${txSignature}?cluster=devnet`);
+};
+
+// transferTokensToPda()
+//   .then(async () => {
+//     console.log("Transfer complete");
+//   })
+//   .catch((error) => {
+//     console.error("Error transferring TOKENS", error);
+//   });
+
+export const transferTokensFromPda = async () => {
+  let blockhash = await connection.getLatestBlockhash();
+
+  // the token I am using has 9 decimals
+  const decimals = 9;
+  const amountInBaseUnits = new BN(0.5).mul(new BN(10).pow(new BN(decimals)));
+
+  const MINT_ADDRESS = new PublicKey(
+    "9PW5vownEEBguqy1WEcCH55vzyLb18428RdFagq7mLfe"
+  );
+
+  const [senderPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("xyzpdastill"), wallet.publicKey.toBuffer()],
+    program.programId
+  );
+
+  const pdaTokenAccount = await getOrCreateAssociatedTokenAccount(
+    connection,
+    wallet,
+    MINT_ADDRESS,
+    senderPda,
+    true,
+    undefined,
+    undefined,
+    TOKEN_2022_PROGRAM_ID,
+    ASSOCIATED_TOKEN_PROGRAM_ID
+  );
+
+  const recipientTokenAccount = await getOrCreateAssociatedTokenAccount(
+    connection,
+    wallet,
+    MINT_ADDRESS,
+    wallet.publicKey,
+    false,
+    undefined,
+    undefined,
+    TOKEN_2022_PROGRAM_ID,
+    ASSOCIATED_TOKEN_PROGRAM_ID
+  );
+
+  console.log("PDA: ", senderPda);
+  console.log("SENDER PDA ATA: ", pdaTokenAccount.address);
+  console.log("RECIPIENT ATA: ", recipientTokenAccount.address);
+
+  const instructions = [
+    await program.methods
+      .transferTokensFromPda(amountInBaseUnits)
+      .accounts({
+        signer: wallet.publicKey,
+        receiverTokenAccount: recipientTokenAccount.address,
+        mint: MINT_ADDRESS,
+        pda: senderPda,
+        pdaTokenAccount: pdaTokenAccount.address,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .instruction(),
+  ];
+
+  const messageV0 = new web3.TransactionMessage({
+    payerKey: wallet.publicKey,
+    recentBlockhash: blockhash.blockhash,
+    instructions: instructions,
+  }).compileToV0Message();
+
+  const transaction = new web3.VersionedTransaction(messageV0);
+
+  transaction.sign([wallet]);
+
+  const txSignature = await connection.sendTransaction(transaction);
+
+  console.log("Transaction hash", txSignature);
+  console.log(`https://explorer.solana.com/tx/${txSignature}?cluster=devnet`);
+};
+
+transferTokensFromPda()
+  .then(async () => {
+    console.log("Transfer complete");
+  })
+  .catch((error) => {
+    console.error("Error transferring TOKENS", error);
+  });

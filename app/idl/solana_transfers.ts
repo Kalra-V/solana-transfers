@@ -195,6 +195,158 @@ export type SolanaTransfers = {
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "transferTokensFromPda",
+      "discriminator": [
+        216,
+        184,
+        217,
+        14,
+        88,
+        44,
+        70,
+        104
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "pda",
+          "docs": [
+            "So we use init_if_needed to ensure the account is created if its not there"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  120,
+                  121,
+                  122,
+                  112,
+                  100,
+                  97,
+                  115,
+                  116,
+                  105,
+                  108,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pdaTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "receiverTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "transferTokensToPda",
+      "discriminator": [
+        219,
+        207,
+        216,
+        92,
+        57,
+        89,
+        250,
+        245
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "senderTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "pda",
+          "docs": [
+            "So we use init_if_needed to ensure the account is created if its not there"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  120,
+                  121,
+                  122,
+                  112,
+                  100,
+                  97,
+                  115,
+                  116,
+                  105,
+                  108,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pdaTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
     }
   ]
 };

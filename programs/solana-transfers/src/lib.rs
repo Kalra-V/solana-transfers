@@ -96,13 +96,13 @@ pub mod solana_transfers {
             mint: ctx.accounts.mint.to_account_info(),
             from: ctx.accounts.pda_token_account.to_account_info(),
             to: ctx.accounts.receiver_token_account.to_account_info(),
-            authority: ctx.accounts.recipient.to_account_info(),
+            authority: ctx.accounts.pda.to_account_info(),
         };
 
         let signer_seeds: &[&[&[u8]]] = &[&[
             b"xyzpdastill",
             ctx.accounts.signer.key.as_ref(),
-            &[ctx.bumps.recipient],
+            &[ctx.bumps.pda],
         ]];
 
         let cpi_program = ctx.accounts.token_program.to_account_info();
@@ -164,11 +164,16 @@ pub struct TransferTokensToPDA<'info> {
     signer: Signer<'info>,
     #[account(mut)]
     sender_token_account: InterfaceAccount<'info, TokenAccount>,
+    /// CHECK: we are not sure if the PDA already exists on-chain or not.
+    /// So we use init_if_needed to ensure the account is created if its not there
+    #[account(init_if_needed, payer = signer, space = 0, seeds = [b"xyzpdastill", signer.key().as_ref()], bump)]
+    pda: UncheckedAccount<'info>,
     #[account(mut)]
     pda_token_account: InterfaceAccount<'info, TokenAccount>,
     #[account(mut)]
     mint: InterfaceAccount<'info, Mint>,
     token_program: Interface<'info, TokenInterface>,
+    system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -178,7 +183,7 @@ pub struct TransferTokensFromPDA<'info> {
     /// CHECK: we are not sure if the PDA already exists on-chain or not.
     /// So we use init_if_needed to ensure the account is created if its not there
     #[account(init_if_needed, payer = signer, space = 0, seeds = [b"xyzpdastill", signer.key().as_ref()], bump)]
-    recipient: UncheckedAccount<'info>,
+    pda: UncheckedAccount<'info>,
     #[account(mut)]
     pda_token_account: InterfaceAccount<'info, TokenAccount>,
     #[account(mut)]
